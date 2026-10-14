@@ -1,0 +1,14 @@
+{
+  "name": "releasepilot-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "tsc --noEmit",
+    "test": "tsc --outDir dist && node --test dist/**/*.test.js"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "typescript": "7.0.2"
+  }
+}

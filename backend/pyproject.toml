@@ -1,0 +1,49 @@
+[project]
+name = "releasepilot-backend"
+version = "0.1.0"
+description = "ReleasePilot cluster identity contract"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "alembic==1.20.0",
+    "argon2-cffi==25.1.0",
+    "fastapi==0.143.0",
+    "httpx==0.28.1",
+    "kubernetes==33.1.0",
+    "langchain-google-genai==4.4.1",
+    "langgraph==1.2.15",
+    "langgraph-checkpoint-postgres==3.1.3",
+    "prometheus-client==0.26.0",
+    "psycopg[binary]==3.3.6",
+    "pydantic==2.14.1",
+    "PyYAML==6.0.3",
+    "sqlalchemy==2.1.4",
+    "uvicorn==0.54.0",
+]
+
+[dependency-groups]
+dev = [
+  "pytest==8.4.2",
+  "ruff==0.16.3",
+  "mypy==1.20.2",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["releasepilot"]
+
+[[tool.mypy.overrides]]
+module = ["kubernetes", "kubernetes.*"]
+ignore_missing_imports = true
+

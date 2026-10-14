@@ -1,0 +1,117 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: releasepilot-prometheus
+  namespace: releasepilot
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 5s
+      scrape_timeout: 3s
+      evaluation_interval: 5s
+    scrape_configs:
+      - job_name: checkout-api
+        metrics_path: /metrics
+        static_configs:
+          - targets: [checkout-api.releasepilot-lab.svc.cluster.local:8080]
+            labels:
+              namespace: releasepilot-lab
+      - job_name: releasepilot-api
+        metrics_path: /metrics
+        static_configs:
+          - targets: [releasepilot-api.releasepilot.svc.cluster.local:8000]
+            labels:
+              namespace: releasepilot
+      - job_name: checkout-canary
+        metrics_path: /metrics
+        static_configs:
+          - targets: [checkout-canary-preview.releasepilot-lab.svc.cluster.local:8080]
+            labels:
+              namespace: releasepilot-lab
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: releasepilot-prometheus
+  namespace: releasepilot
+  labels:
+    app: releasepilot-prometheus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: releasepilot-prometheus
+  template:
+    metadata:
+      labels:
+        app: releasepilot-prometheus
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: prometheus
+          image: prom/prometheus:v3.15.0@sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e
+          imagePullPolicy: IfNotPresent
+          args:
+            - --config.file=/etc/prometheus/prometheus.yml
+            - --storage.tsdb.path=/prometheus
+            - --storage.tsdb.retention.time=6h
+            - --web.listen-address=0.0.0.0:9090
+          ports:
+            - name: http
+              containerPort: 9090
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: http
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: http
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: config
+              mountPath: /etc/prometheus
+              readOnly: true
+            - name: data
+              mountPath: /prometheus
+      volumes:
+        - name: config
+          configMap:
+            name: releasepilot-prometheus
+        - name: data
+          emptyDir:
+            sizeLimit: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: releasepilot-prometheus
+  namespace: releasepilot
+spec:
+  type: ClusterIP
+  selector:
+    app: releasepilot-prometheus
+  ports:
+    - name: http
+      port: 9090
+      targetPort: http

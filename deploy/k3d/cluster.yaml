@@ -1,0 +1,23 @@
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: releasepilot-lab
+servers: 1
+agents: 0
+image: rancher/k3s:v1.33.13-k3s1
+kubeAPI:
+  hostIP: "127.0.0.1"
+options:
+  k3d:
+    wait: true
+    timeout: "120s"
+    disableLoadbalancer: true
+  k3s:
+    extraArgs:
+      - arg: "--disable=traefik"
+        nodeFilters:
+          - server:0
+  kubeconfig:
+    updateDefaultKubeconfig: true
+    switchCurrentContext: false
+

@@ -1,0 +1,12 @@
+[project]
+name = "releasepilot-checkout-api"
+version = "0.1.0"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "prometheus-client==0.26.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+

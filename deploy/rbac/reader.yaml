@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: releasepilot-reader
+  namespace: releasepilot-lab
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: releasepilot-reader
+  namespace: releasepilot-lab
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["pods", "events"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: releasepilot-reader
+  namespace: releasepilot-lab
+subjects:
+  - kind: ServiceAccount
+    name: releasepilot-reader
+    namespace: releasepilot-lab
+roleRef:
+  kind: Role
+  name: releasepilot-reader
+  apiGroup: rbac.authorization.k8s.io
+
